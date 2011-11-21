@@ -120,11 +120,18 @@ config CPU_FREQ_DEFAULT_GOV_INTERACTIVE
           loading your cpufreq low-level hardware driver, using the
           'interactive' governor for latency-sensitive workloads.
 
-config CPU_FREQ_DEFAULT_GOV_SMARTASS2
-  	bool "smartass2"
-  	select CPU_FREQ_GOV_SMARTASS2
-  	help
-    	  Use the CPUFreq governor 'smartassV2' as default.
+config CPU_FREQ_DEFAULT_GOV_SMARTASS
+	bool "smartass"
+	select CPU_FREQ_GOV_SMARTASS
+	select CPU_FREQ_GOV_PERFORMANCE
+	help
+		Use the CPUFreq Governor 'smartass' as default.
+
+config CPU_FREQ_DEFAULT_GOV_SCARY
+	bool "scary"
+	select CPU_FREQ_GOV_SCARY
+	help
+		Use the CPUFreq governor 'scary' as default.
 
 config CPU_FREQ_DEFAULT_GOV_MINMAX
 	bool "minmax"
@@ -134,6 +141,27 @@ config CPU_FREQ_DEFAULT_GOV_MINMAX
 	  Use the CPUFreq governor 'minmax' as default. This minimizes the
 	  frequency jumps does by the governor. This is aimed at maximizing
 	  both perfomance and battery life.
+
+config CPU_FREQ_DEFAULT_GOV_SAVAGEDZEN
+	bool "SavagedZen"
+	select CPU_FREQ_GOV_SAVAGEDZEN
+	help
+	  Use the CPUFreq governor 'savagedzen' as default.
+
+config CPU_FREQ_DEFAULT_GOV_INTERACTIVEX
+	bool "interactiveX"
+	select CPU_FREQ_GOV_INTERACTIVEX
+	help
+	  Use the CPUFreq governor 'interactiveX' as default. This allows
+	  you to get a full dynamic cpu frequency capable system by simply
+	  loading your cpufreq low-level hardware driver, using the
+	  'interactiveX' governor for latency-sensitive workloads.
+
+config CPU_FREQ_DEFAULT_GOV_SMARTASS2
+	bool "smartass2"
+	select CPU_FREQ_GOV_SMARTASS2
+	help
+	 Use the CPUFreq governor 'smartassV2' as default.
 
 endchoice
 
@@ -221,12 +249,19 @@ config CPU_FREQ_GOV_CONSERVATIVE
 
 	  If in doubt, say N.
 
-config CPU_FREQ_GOV_SMARTASS2
-  	tristate "'smartassV2' cpufreq governor"
-  	depends on CPU_FREQ
-  	help
-    	  'smartassV2' - a "smart" optimized governor originally for the hero.
-    	  If in doubt, say N.
+config CPU_FREQ_GOV_SMARTASS
+	tristate "'smartass' cpufreq governor"
+	depends on CPU_FREQ
+	help
+		'smartass' - a "smart" optimized governor
+
+config CPU_FREQ_GOV_SCARY
+	tristate "'scary' cpufreq governor"
+	depends on CPU_FREQ
+	help
+		scary - a governor for cabbages
+
+		If in doubt, say N.
 
 config CPU_FREQ_GOV_MINMAX
 	tristate "'minmax' cpufreq governor"
@@ -235,6 +270,26 @@ config CPU_FREQ_GOV_MINMAX
 	  'minmax' - this driver tries to minimize the frequency jumps by limiting
 	  the the selected frequencies to either the min or the max frequency of
 	  the policy. The frequency is selected according to the load.
+
+	  If in doubt, say N.
+
+config CPU_FREQ_GOV_INTERACTIVEX
+	tristate "'interactiveX' cpufreq policy governor"
+	help
+	  'interactiveX' - Modified version of interactive with sleep+wake code.
+
+config CPU_FREQ_GOV_SAVAGEDZEN
+	tristate "'savagedzen' cpufreq governor"
+	depends on CPU_FREQ
+	help
+	   'Savaged-Zen' - a "smartass" based governor
+	   If in doubt, say N.
+
+config CPU_FREQ_GOV_SMARTASS2
+	tristate "'smartassV2' cpufreq governor"
+	depends on CPU_FREQ
+	help
+	  'smartassV2' - a "smart" optimized governor for the hero!
 
 	  If in doubt, say N.
 
