@@ -1166,5 +1166,3 @@ MODULE_DESCRIPTION("ltr502als_i2c Sennsor driver");
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("NicoleWeng");
 /*} FIH, NicoleWeng, 2010/03/09  */
-
-

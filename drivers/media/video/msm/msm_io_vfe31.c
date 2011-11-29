@@ -698,7 +698,6 @@ int msm_camio_probe_on(struct platform_device *pdev)
 	pr_err("Prepare to enable %s", pdev->name);
 	camdev->camera_gpio_on();
 	msm_camera_vreg_enable();
-	
 	return msm_camio_clk_enable(CAMIO_CAM_MCLK_CLK);
 }
 
