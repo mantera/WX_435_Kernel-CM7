@@ -57,7 +57,7 @@
 #define VDD_RAW(mv) (((MV(mv) / V_STEP) - 30) | VREG_DATA)
 
 #define MAX_AXI_KHZ 192000
-#define SEMC_ACPU_MIN_UV_MV 650U
+#define SEMC_ACPU_MIN_UV_MV 600U
 #define SEMC_ACPU_MAX_UV_MV 1525U
 
 struct clock_state {

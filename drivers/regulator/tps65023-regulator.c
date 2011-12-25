@@ -87,6 +87,8 @@
 
 /* Supported voltage values for regulators */
 static const u16 VDCDC1_VSEL_table[] = {
+	600, 625, 650, 675,
+	700, 725, 750, 775,
 	800, 825, 850, 875,
 	900, 925, 950, 975,
 	1000, 1025, 1050, 1075,
@@ -391,7 +393,7 @@ static int tps65023_dcdc_set_voltage(struct regulator_dev *dev,
 	if (tps->dcdc1_last_uV)
 		delay = abs(tps->dcdc1_last_uV - uV);
 	else
-		delay = max(uV - 800000, 1600000 - uV);
+		delay = max(uV - 600000, 1600000 - uV);
 	delay = DIV_ROUND_UP(delay, 14400);
 	udelay(delay);
 	tps->dcdc1_last_uV = rv ? 0 /* Unknown voltage */ : uV;
@@ -601,7 +603,7 @@ static int __devexit tps_65023_remove(struct i2c_client *client)
 static const struct tps_info tps65023_regs[] = {
 	{
 		.name = "VDCDC1",
-		.min_uV =  800000,
+		.min_uV =  600000,
 		.max_uV = 1600000,
 		.table_len = ARRAY_SIZE(VDCDC1_VSEL_table),
 		.table = VDCDC1_VSEL_table,
