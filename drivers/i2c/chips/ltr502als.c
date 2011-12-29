@@ -128,7 +128,7 @@ _OWEN_ struct early_suspend ALSPS_early_suspend;
 
 //Div2D5-OwenHuang-BSP2030_FB0_Psensor_Phone_Call-00*{
 // KD Turn up debugging
-#define DEBUG_LEVEL 1 
+#define DEBUG_LEVEL 0 
 #if (DEBUG_LEVEL == 2) 
 #define my_debug(flag, fmt, ...) \
 	printk(flag pr_fmt(fmt), ##__VA_ARGS__)
