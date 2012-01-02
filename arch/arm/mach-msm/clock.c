@@ -42,6 +42,9 @@ static struct notifier_block axi_freq_notifier_block;
 struct clk *clk_get(struct device *dev, const char *id)
 {
 	struct clk *clk;
+     
+        if (!id)
+           return ERR_PTR(-ENOENT);
 
 	mutex_lock(&clocks_mutex);
 

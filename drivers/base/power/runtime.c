@@ -746,10 +746,10 @@ EXPORT_SYMBOL_GPL(pm_request_resume);
  */
 int __pm_runtime_get(struct device *dev, bool sync)
 {
-	int retval = 1;
-
-	if (atomic_add_return(1, &dev->power.usage_count) == 1)
-		retval = sync ? pm_runtime_resume(dev) : pm_request_resume(dev);
+	int retval;
+                 
+        atomic_inc(&dev->power.usage_count);
+        retval = sync ? pm_runtime_resume(dev) : pm_request_resume(dev);
 
 	return retval;
 }

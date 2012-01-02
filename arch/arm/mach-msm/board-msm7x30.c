@@ -19,6 +19,7 @@
 #include <linux/kernel.h>
 #include <linux/irq.h>
 #include <linux/gpio.h>
+#include <linux/gpio_event.h>
 #include <linux/platform_device.h>
 #include <linux/delay.h>
 #include <linux/bootmem.h>
@@ -160,11 +161,10 @@
 /* FIHTDC, Div2-SW2-BSP SungSCLee, HDMI { */
 #define MSM_FB_SIZE		0xA00000       ///0x500000
 /* } FIHTDC, Div2-SW2-BSP SungSCLee, HDMI */
-#define MSM_GPU_PHYS_SIZE       SZ_2M
+#define MSM_GPU_PHYS_SIZE       SZ_4M
 #define MSM_PMEM_ADSP_SIZE      0x2000000  //SW2-5-CL-Camera-720P-00*
 #define MSM_FLUID_PMEM_ADSP_SIZE	0x2800000
 #define PMEM_KERNEL_EBI1_SIZE   0x600000
-#define MSM_PMEM_AUDIO_SIZE     0x200000
 
 #define PMIC_GPIO_INT		27
 #define PMIC_VREG_WLAN_LEVEL	2900
@@ -5007,12 +5007,6 @@ static struct android_pmem_platform_data android_pmem_adsp_pdata = {
        .cached = 0,
 };
 
-static struct android_pmem_platform_data android_pmem_audio_pdata = {
-       .name = "pmem_audio",
-       .allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
-       .cached = 0,
-};
-
 static struct platform_device android_pmem_kernel_ebi1_device = {
        .name = "android_pmem",
        .id = 1,
@@ -5025,73 +5019,110 @@ static struct platform_device android_pmem_adsp_device = {
        .dev = { .platform_data = &android_pmem_adsp_pdata },
 };
 
-static struct platform_device android_pmem_audio_device = {
-       .name = "android_pmem",
-       .id = 4,
-       .dev = { .platform_data = &android_pmem_audio_pdata },
-};
-
-static struct kgsl_platform_data kgsl_pdata = {
-#ifdef CONFIG_MSM_NPA_SYSTEM_BUS
-	/* NPA Flow IDs */
-	.high_axi_3d = MSM_AXI_FLOW_3D_GPU_HIGH,
-	.high_axi_2d = MSM_AXI_FLOW_2D_GPU_HIGH,
-#else
-	/* AXI rates in KHz */
-	.high_axi_3d = 192000,
-	.high_axi_2d = 192000,
-#endif
-	.max_grp2d_freq = 0,
-	.min_grp2d_freq = 0,
-	.set_grp2d_async = NULL, /* HW workaround, run Z180 SYNC @ 192 MHZ */
-	.max_grp3d_freq = 245760000,
-	.min_grp3d_freq = 192 * 1000*1000,
-	.set_grp3d_async = set_grp3d_async,
-	.imem_clk_name = "imem_clk",
-	.grp3d_clk_name = "grp_clk",
-	.grp2d0_clk_name = "grp_2d_clk",
-};
-
-static struct resource kgsl_resources[] = {
+struct resource kgsl_3d0_resources[] = {
 	{
-		.name = "kgsl_reg_memory",
+		.name  = KGSL_3D0_REG_MEMORY,
 		.start = 0xA3500000, /* 3D GRP address */
 		.end = 0xA351ffff,
 		.flags = IORESOURCE_MEM,
 	},
 	{
-		.name   = "kgsl_phys_memory",
-		.start = 0,
-		.end = 0,
-		.flags = IORESOURCE_MEM,
-	},
-	{
-		.name = "kgsl_yamato_irq",
+		.name = KGSL_3D0_IRQ,
 		.start = INT_GRP_3D,
 		.end = INT_GRP_3D,
 		.flags = IORESOURCE_IRQ,
 	},
+};
+
+static struct kgsl_device_platform_data kgsl_3d0_pdata = {
+	.pwr_data = {
+		.pwrlevel = {
+			{
+				.gpu_freq = 245760000,
+				.bus_freq = 192000000,
+			},
+			{
+				.gpu_freq = 192000000,
+				.bus_freq = 152000000,
+			},
+			{
+				.gpu_freq = 192000000,
+				.bus_freq = 0,
+			},
+		},
+		.init_level = 0,
+		.num_levels = 3,
+		.set_grp_async = set_grp3d_async,
+		.idle_timeout = HZ/20,
+		.nap_allowed = true,
+	},
+	.clk = {
+		.name = {
+			.clk = "grp_clk",
+			.pclk = "grp_pclk",
+		},
+	},
+	.imem_clk_name = {
+		.clk = "imem_clk",
+		.pclk = NULL,
+	},
+};
+
+struct platform_device msm_kgsl_3d0 = {
+	.name = "kgsl-3d0",
+	.id = 0,
+	.num_resources = ARRAY_SIZE(kgsl_3d0_resources),
+	.resource = kgsl_3d0_resources,
+	.dev = {
+		.platform_data = &kgsl_3d0_pdata,
+	},
+};
+
+static struct resource kgsl_2d0_resources[] = {
 	{
-		.name = "kgsl_2d0_reg_memory",
+		.name = KGSL_2D0_REG_MEMORY,
 		.start = 0xA3900000, /* Z180 base address */
 		.end = 0xA3900FFF,
 		.flags = IORESOURCE_MEM,
 	},
 	{
-		.name  = "kgsl_2d0_irq",
+		.name = KGSL_2D0_IRQ,
 		.start = INT_GRP_2D,
 		.end = INT_GRP_2D,
 		.flags = IORESOURCE_IRQ,
 	},
 };
 
-static struct platform_device msm_device_kgsl = {
-	.name = "kgsl",
-	.id = -1,
-	.num_resources = ARRAY_SIZE(kgsl_resources),
-	.resource = kgsl_resources,
+static struct kgsl_device_platform_data kgsl_2d0_pdata = {
+	.pwr_data = {
+		.pwrlevel = {
+			{
+				.gpu_freq = 0,
+				.bus_freq = 192000000,
+			},
+		},
+		.init_level = 0,
+		.num_levels = 1,
+		/* HW workaround, run Z180 SYNC @ 192 MHZ */
+		.set_grp_async = NULL,
+		.idle_timeout = HZ/10,
+		.nap_allowed = true,
+	},
+	.clk = {
+		.name = {
+			.clk = "grp_2d_clk",
+			.pclk = "grp_2d_pclk",
+		},
+	},
+};
+
+struct platform_device msm_kgsl_2d0 = {
+	.name = "kgsl-2d0",
+	.id = 0,
+	.num_resources = ARRAY_SIZE(kgsl_2d0_resources),
+	.resource = kgsl_2d0_resources,
 	.dev = {
-		.platform_data = &kgsl_pdata,
+		.platform_data = &kgsl_2d0_pdata,
 	},
 };
 
@@ -7041,7 +7072,6 @@ static struct platform_device *devices[] __initdata = {
 /* } FIHTDC, Div2-SW2-BSP SungSCLee, HDMI */  
 	&android_pmem_kernel_ebi1_device,
 	&android_pmem_adsp_device,
-	&android_pmem_audio_device,
 	&msm_device_i2c,
 	&msm_device_i2c_2,
 	&msm_device_uart_dm1,
@@ -7074,7 +7104,8 @@ static struct platform_device *devices[] __initdata = {
 	&bcm4329_fm_power_device,
 #endif
 // FIHTDC-SW2-Div6-CW-Project BCM4329 BLUETOOTH driver For SF8 +]
-	&msm_device_kgsl,
+	&msm_kgsl_3d0,
+	&msm_kgsl_2d0,
 //Div2-SW6-MM-HL-Camera-BringUp-00+{
 #ifdef CONFIG_FIH_MT9P111
         &msm_camera_sensor_mt9p111,
@@ -9540,13 +9571,6 @@ static void __init fluid_pmem_adsp_size_setup(char **p)
 }
 __early_param("fluid_pmem_adsp_size=", fluid_pmem_adsp_size_setup);
 
-static unsigned pmem_audio_size = MSM_PMEM_AUDIO_SIZE;
-static void __init pmem_audio_size_setup(char **p)
-{
-	pmem_audio_size = memparse(*p, p);
-}
-__early_param("pmem_audio_size=", pmem_audio_size_setup);
-
 static unsigned pmem_kernel_ebi1_size = PMEM_KERNEL_EBI1_SIZE;
 static void __init pmem_kernel_ebi1_size_setup(char **p)
 {
@@ -9577,16 +9601,8 @@ static void __init msm7x30_allocate_memory_regions(void)
 	msm_fb_resources[0].end = msm_fb_resources[0].start + size - 1;
 	pr_info("allocating %lu bytes at %p (%lx physical) for fb\n",
 		size, addr, __pa(addr));
-
-	size = pmem_audio_size;
-	if (size) {
-		addr = alloc_bootmem(size);
-		android_pmem_audio_pdata.start = __pa(addr);
-		android_pmem_audio_pdata.size = size;
-		pr_info("allocating %lu bytes at %p (%lx physical) for audio "
-			"pmem arena\n", size, addr, __pa(addr));
-	}
-
+	
+/*
 	size = gpu_phys_size;
 	if (size) {
 		addr = alloc_bootmem(size);
@@ -9595,7 +9611,7 @@ static void __init msm7x30_allocate_memory_regions(void)
 		pr_info("allocating %lu bytes at %p (%lx physical) for "
 			"KGSL\n", size, addr, __pa(addr));
 	}
-
+*/
 	size = pmem_kernel_ebi1_size;
 	if (size) {
 		addr = alloc_bootmem_aligned(size, 0x100000);
