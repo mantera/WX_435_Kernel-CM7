@@ -239,74 +239,60 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
                 bHomeCapKeyPressed = 0;
                 bSearchCapKeyPressed = 0;
             }
+        } else {
 
-        } else if (virtual_button == 2 && !bBackCapKeyPressed) {
             if (!bIsPenUp) {
                 input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 0);
                 input_mt_sync(bi041p.input);
                 bIsPenUp = 1;
             }
 
-            if (hw_ver == HW_FD1_PR3 || hw_ver == HW_FD1_PR4) {
-                input_report_key(bi041p.input, KEY_MENU, 1);
-                bMenuCapKeyPressed = 1;
-            } else {
-                input_report_key(bi041p.input, KEY_BACK, 1);
-                bBackCapKeyPressed = 1;
-            }
+            if (virtual_button == 2 && !bBackCapKeyPressed) {
 
-        } else if (virtual_button == 4 && !bMenuCapKeyPressed) {
-            if (!bIsPenUp) {
-                input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 0);
-                input_mt_sync(bi041p.input);
-                bIsPenUp = 1;
-            }
+                if (hw_ver == HW_FD1_PR3 || hw_ver == HW_FD1_PR4) {
+                    input_report_key(bi041p.input, KEY_MENU, 1);
+                    bMenuCapKeyPressed = 1;
+                } else {
+                    input_report_key(bi041p.input, KEY_BACK, 1);
+                    bBackCapKeyPressed = 1;
+                }
+            } else if (virtual_button == 4 && !bMenuCapKeyPressed) {
 
-            if (hw_ver == HW_FD1_PR3 || hw_ver == HW_FD1_PR4) {
-                input_report_key(bi041p.input, KEY_HOME, 1);
-                bHomeCapKeyPressed = 1;
-            } else {
-                input_report_key(bi041p.input, KEY_MENU, 1);
-                bMenuCapKeyPressed = 1;
-            }
+                if (hw_ver == HW_FD1_PR3 || hw_ver == HW_FD1_PR4) {
+                    input_report_key(bi041p.input, KEY_HOME, 1);
+                    bHomeCapKeyPressed = 1;
+                } else {
+                    input_report_key(bi041p.input, KEY_MENU, 1);
+                    bMenuCapKeyPressed = 1;
+                }
 
-        } else if (virtual_button == 8 && !bHomeCapKeyPressed) {
-            if (!bIsPenUp) {
-                input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 0);
-                input_mt_sync(bi041p.input);
-                bIsPenUp = 1;
-            }
+            } else if (virtual_button == 8 && !bHomeCapKeyPressed) {
 
-            if (hw_ver == HW_FD1_PR3) {
-                input_report_key(bi041p.input, KEY_SEARCH, 1);
-                bSearchCapKeyPressed = 1;
-            } else if (hw_ver == HW_FD1_PR4) {
-                input_report_key(bi041p.input, KEY_BACK, 1);
-                bBackCapKeyPressed = 1;
-            } else {
-                input_report_key(bi041p.input, KEY_HOME, 1);
-                bHomeCapKeyPressed = 1;
-            }
+                if (hw_ver == HW_FD1_PR3) {
+                    input_report_key(bi041p.input, KEY_SEARCH, 1);
+                    bSearchCapKeyPressed = 1;
+                } else if (hw_ver == HW_FD1_PR4) {
+                    input_report_key(bi041p.input, KEY_BACK, 1);
+                    bBackCapKeyPressed = 1;
+                } else {
+                    input_report_key(bi041p.input, KEY_HOME, 1);
+                    bHomeCapKeyPressed = 1;
+                }
 
-        } else if (virtual_button == 16 && !bSearchCapKeyPressed) {
-            if (!bIsPenUp) {
-                input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 0);
-                input_mt_sync(bi041p.input);
-                bIsPenUp = 1;
-            }
+            } else if (virtual_button == 16 && !bSearchCapKeyPressed) {
 
-            if (hw_ver == HW_FD1_PR3) {
-                input_report_key(bi041p.input, KEY_BACK, 1);
-                bBackCapKeyPressed = 1;
-            } else if (hw_ver == HW_FD1_PR4) {
-                input_report_key(bi041p.input, KEY_SEARCH, 1);
-                bSearchCapKeyPressed = 1;
-            } else {
-                input_report_key(bi041p.input, KEY_SEARCH, 1);
-                bSearchCapKeyPressed = 1;
+                if (hw_ver == HW_FD1_PR3) {
+                    input_report_key(bi041p.input, KEY_BACK, 1);
+                    bBackCapKeyPressed = 1;
+                } else if (hw_ver == HW_FD1_PR4) {
+                    input_report_key(bi041p.input, KEY_SEARCH, 1);
+                    bSearchCapKeyPressed = 1;
+                } else {
+                    input_report_key(bi041p.input, KEY_SEARCH, 1);
+                    bSearchCapKeyPressed = 1;
+                }
             }
-        }
-		
+	}
 	input_sync(bi041p.input);
     }
 /*
