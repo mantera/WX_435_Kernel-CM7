@@ -130,6 +130,9 @@ static int bi041p_get_fw_version(void)
  *  3. Removed abs() call for y coordinate calculations (unnecessary)
  *  4. Removed "hello packet" check & reporting (only triggered when
  *     coming out of suspend mode)
+ *  5. Consolidated virtual_button & resetting capkey flags code
+ *  6. Removed checks for other HW devices, which had problems
+ *     of checking for one cap button flag & resetting a different one.
  */
 #define XCORD1(x) ((((int)((x)[1]) & 0xF0) << 4) + ((int)((x)[2])))
 #define YCORD1(y) ((((int)((y)[1]) & 0x0F) << 8) + ((int)((y)[3])))
@@ -162,12 +165,25 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
         cnt = (buffer[8] ^ 0x01) >> 1;
         virtual_button = (buffer[8]) >> 3;
 
-        if ((virtual_button == 0)
-             && !bBackCapKeyPressed && !bMenuCapKeyPressed
-             && !bHomeCapKeyPressed && !bSearchCapKeyPressed) {
-        //
-        // Touchscreen Pressed
-        //
+        if (virtual_button == 0) {   // Touchscreen Pressed
+
+            if (bBackCapKeyPressed) {
+                input_report_key(bi041p.input, KEY_BACK, 0);
+                bBackCapKeyPressed = 0;
+
+            } else if (bMenuCapKeyPressed) {
+                input_report_key(bi041p.input, KEY_MENU, 0);
+                bMenuCapKeyPressed = 0;
+
+            } else if (bHomeCapKeyPressed) {
+                input_report_key(bi041p.input, KEY_HOME, 0);
+                bHomeCapKeyPressed = 0;
+
+            } else if (bSearchCapKeyPressed) {
+                input_report_key(bi041p.input, KEY_SEARCH, 0);
+                bSearchCapKeyPressed = 0;
+            }
+
 #ifdef CONFIG_FIH_FTM
             if (cnt) {
                 input_report_abs(bi041p.input, ABS_X, XCORD1(buffer));
@@ -208,38 +224,9 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
                 input_mt_sync(bi041p.input);
             }
 #endif
-        } else if ((virtual_button == 0) &&
-                   (bBackCapKeyPressed || bMenuCapKeyPressed ||
-                    bHomeCapKeyPressed || bSearchCapKeyPressed)) {
-        //
-        // Capacitive Button Pressed
-        //
-            if (bBackCapKeyPressed) {
-                input_report_key(bi041p.input, KEY_BACK, 0);
-                bBackCapKeyPressed = 0;
-                bMenuCapKeyPressed = 0;
-                bHomeCapKeyPressed = 0;
-                bSearchCapKeyPressed = 0;
-            } else if (bMenuCapKeyPressed) {
-                input_report_key(bi041p.input, KEY_MENU, 0);
-                bBackCapKeyPressed = 0;
-                bMenuCapKeyPressed = 0;
-                bHomeCapKeyPressed = 0;
-                bSearchCapKeyPressed = 0;
-            } else if (bHomeCapKeyPressed) {
-                input_report_key(bi041p.input, KEY_HOME, 0);
-                bBackCapKeyPressed = 0;
-                bMenuCapKeyPressed = 0;
-                bHomeCapKeyPressed = 0;
-                bSearchCapKeyPressed = 0;
-            } else if (bSearchCapKeyPressed) {
-                input_report_key(bi041p.input, KEY_SEARCH, 0);
-                bBackCapKeyPressed = 0;
-                bMenuCapKeyPressed = 0;
-                bHomeCapKeyPressed = 0;
-                bSearchCapKeyPressed = 0;
-            }
-        } else {
+
+        } else {  // Capacitive button pressed, optimized for Motorola Triumph
+                  // A.K.A. FD1_PR4/PR5 in family of similar devices
 
             if (!bIsPenUp) {
                 input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 0);
@@ -247,50 +234,21 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
                 bIsPenUp = 1;
             }
 
-            if (virtual_button == 2 && !bBackCapKeyPressed) {
+            if (virtual_button == 2 && !bMenuCapKeyPressed) {
+                input_report_key(bi041p.input, KEY_MENU, 1);
+                bMenuCapKeyPressed = 1;
 
-                if (hw_ver == HW_FD1_PR3 || hw_ver == HW_FD1_PR4) {
-                    input_report_key(bi041p.input, KEY_MENU, 1);
-                    bMenuCapKeyPressed = 1;
-                } else {
-                    input_report_key(bi041p.input, KEY_BACK, 1);
-                    bBackCapKeyPressed = 1;
-                }
-            } else if (virtual_button == 4 && !bMenuCapKeyPressed) {
+            } else if (virtual_button == 4 && !bHomeCapKeyPressed) {
+                input_report_key(bi041p.input, KEY_HOME, 1);
+                bHomeCapKeyPressed = 1;
 
-                if (hw_ver == HW_FD1_PR3 || hw_ver == HW_FD1_PR4) {
-                    input_report_key(bi041p.input, KEY_HOME, 1);
-                    bHomeCapKeyPressed = 1;
-                } else {
-                    input_report_key(bi041p.input, KEY_MENU, 1);
-                    bMenuCapKeyPressed = 1;
-                }
-
-            } else if (virtual_button == 8 && !bHomeCapKeyPressed) {
-
-                if (hw_ver == HW_FD1_PR3) {
-                    input_report_key(bi041p.input, KEY_SEARCH, 1);
-                    bSearchCapKeyPressed = 1;
-                } else if (hw_ver == HW_FD1_PR4) {
-                    input_report_key(bi041p.input, KEY_BACK, 1);
-                    bBackCapKeyPressed = 1;
-                } else {
-                    input_report_key(bi041p.input, KEY_HOME, 1);
-                    bHomeCapKeyPressed = 1;
-                }
+            } else if (virtual_button == 8 && !bBackCapKeyPressed) {
+                input_report_key(bi041p.input, KEY_BACK, 1);
+                bBackCapKeyPressed = 1;
 
             } else if (virtual_button == 16 && !bSearchCapKeyPressed) {
-
-                if (hw_ver == HW_FD1_PR3) {
-                    input_report_key(bi041p.input, KEY_BACK, 1);
-                    bBackCapKeyPressed = 1;
-                } else if (hw_ver == HW_FD1_PR4) {
-                    input_report_key(bi041p.input, KEY_SEARCH, 1);
-                    bSearchCapKeyPressed = 1;
-                } else {
-                    input_report_key(bi041p.input, KEY_SEARCH, 1);
-                    bSearchCapKeyPressed = 1;
-                }
+                input_report_key(bi041p.input, KEY_SEARCH, 1);
+                bSearchCapKeyPressed = 1;
             }
 	}
 	input_sync(bi041p.input);
