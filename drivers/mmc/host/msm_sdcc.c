@@ -1087,7 +1087,9 @@ msmsdcc_irq(int irq, void *dev_id)
 			if (host->sdcc_suspending)
 				wake_lock(&host->sdio_suspend_wlock);
 			mmc_signal_sdio_irq(host->mmc);
-		}
+		} else {
+                        wake_unlock(&host->sdio_suspend_wlock);
+                }
 #endif
 		/*
 		 * Check for proper command response
