@@ -199,6 +199,8 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
                 input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 255);
                 input_report_abs(bi041p.input, ABS_MT_POSITION_X, XCORD1(buffer));
                 input_report_abs(bi041p.input, ABS_MT_POSITION_Y, TS_MAX_Y - YCORD1(buffer));
+                input_report_abs(bi041p.input, ABS_PRESSURE, 255);
+                input_report_key(bi041p.input, BTN_TOUCH, 1);
                 input_mt_sync(bi041p.input);
                 bIsPenUp = 0;
 //                if (bi041p_debug)
@@ -207,6 +209,8 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
                 input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 0);
                 input_report_abs(bi041p.input, ABS_MT_POSITION_X, XCORD1(buffer));
                 input_report_abs(bi041p.input, ABS_MT_POSITION_Y, TS_MAX_Y - YCORD1(buffer));
+                input_report_abs(bi041p.input, ABS_PRESSURE, 0);
+                input_report_key(bi041p.input, BTN_TOUCH, 0);
                 input_mt_sync(bi041p.input);
                 bIsPenUp = 1;
 //                if (bi041p_debug)
@@ -216,11 +220,15 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
                 input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 255);
                 input_report_abs(bi041p.input, ABS_MT_POSITION_X, XCORD2(buffer));
                 input_report_abs(bi041p.input, ABS_MT_POSITION_Y, TS_MAX_Y - YCORD2(buffer));
+                input_report_abs(bi041p.input, ABS_PRESSURE, 255);
+                input_report_key(bi041p.input, BTN_TOUCH, 1);
                 input_mt_sync(bi041p.input);
             } else {        // Second touch released
                 input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 0);
                 input_report_abs(bi041p.input, ABS_MT_POSITION_X, XCORD2(buffer));
                 input_report_abs(bi041p.input, ABS_MT_POSITION_Y, TS_MAX_Y - YCORD2(buffer));
+                input_report_abs(bi041p.input, ABS_PRESSURE, 0);
+                input_report_key(bi041p.input, BTN_TOUCH, 0);
                 input_mt_sync(bi041p.input);
             }
 #endif
@@ -230,6 +238,8 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
 
             if (!bIsPenUp) {
                 input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 0);
+                input_report_abs(bi041p.input, ABS_PRESSURE, 0);
+                input_report_key(bi041p.input, BTN_TOUCH, 0);
                 input_mt_sync(bi041p.input);
                 bIsPenUp = 1;
             }
@@ -724,9 +734,10 @@ static int bi041p_probe(struct i2c_client *client, const struct i2c_device_id *i
 	input_set_abs_params(bi041p.input, ABS_Y, TS_MIN_Y, TS_MAX_Y, 0, 0);
 	input_set_abs_params(bi041p.input, ABS_PRESSURE, 0, 255, 0, 0);
 #else
-    input_set_abs_params(bi041p.input, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
-    input_set_abs_params(bi041p.input, ABS_MT_POSITION_X, TS_MIN_X, TS_MAX_X, 0, 0);
-    input_set_abs_params(bi041p.input, ABS_MT_POSITION_Y, TS_MIN_Y, TS_MAX_Y, 0, 0);
+	input_set_abs_params(bi041p.input, ABS_MT_TOUCH_MAJOR, 0, 255, 0, 0);
+	input_set_abs_params(bi041p.input, ABS_MT_POSITION_X, TS_MIN_X, TS_MAX_X, 0, 0);
+	input_set_abs_params(bi041p.input, ABS_MT_POSITION_Y, TS_MIN_Y, TS_MAX_Y, 0, 0);
+	input_set_abs_params(bi041p.input, ABS_PRESSURE, 0, 255, 0, 0);
 #endif
 	
 	if (input_register_device(bi041p.input))
