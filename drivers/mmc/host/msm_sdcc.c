@@ -1853,9 +1853,12 @@ static void msmsdcc_early_suspend(struct early_suspend *h)
 	if (libra_loaded) {
 		wake_lock(&host->sdio_wlan_lock);
 		printk("%s: [msm_sdcc] wake_lock WLAN\n", mmc_hostname(host->mmc));
-	} else {
-		printk("%s: [msm_sdcc] NO wake_lock WLAN NOT loaded\n", mmc_hostname(host->mmc));
-	}	
+        }
+        if (bt_loaded) {
+                wake_lock(&host->sdio_bt_lock);
+                printk("%s: [msm_sdcc] wake_lock Bluetooth\n", mmc_hostname(host->mmc));
+        }
+
 	spin_lock_irqsave(&host->lock, flags);
 	host->polling_enabled = host->mmc->caps & MMC_CAP_NEEDS_POLL;
 	host->mmc->caps &= ~MMC_CAP_NEEDS_POLL;
@@ -1907,9 +1910,12 @@ static void msmsdcc_late_resume(struct early_suspend *h)
 	if (libra_loaded) {
 		wake_unlock(&host->sdio_wlan_lock);
 		printk("%s: [msm_sdcc] wake_unlock WLAN\n", mmc_hostname(host->mmc));
-	} else {
-		printk("%s: [msm_sdcc] NO wake_unlock WLAN NOT loaded\n", mmc_hostname(host->mmc));
-	}
+        }
+        if (bt_loaded) {
+                wake_unlock(&host->sdio_bt_lock);
+                printk("%s: [msm_sdcc] wake_unlock Bluetooth\n", mmc_hostname(host->mmc));
+        }
+
 	if (host->polling_enabled) {
 		spin_lock_irqsave(&host->lock, flags);
 		host->mmc->caps |= MMC_CAP_NEEDS_POLL;
@@ -2126,6 +2132,9 @@ msmsdcc_probe(struct platform_device *pdev)
 // KD 2010-10-26 - Init wake lock for the WLAN interface
 	wake_lock_init(&host->sdio_wlan_lock, WAKE_LOCK_SUSPEND,
 					mmc_hostname(mmc));
+// 2012-01-14 - Init wake lock for the Bluetooth interface
+        wake_lock_init(&host->sdio_bt_lock, WAKE_LOCK_SUSPEND,
+                                        mmc_hostname(mmc));
 
 //DIV5-CONN-MW-POWER SAVING MODE-01+[
         #if defined(CONFIG_FIH_PROJECT_SF4Y6) && defined(CONFIG_FIH_WIMAX_GCT_SDIO)
@@ -2274,6 +2283,7 @@ msmsdcc_probe(struct platform_device *pdev)
 	}
 // KD 2010-10-26 Destroy wake lock on the WLAN interface on the way out
 	wake_lock_destroy(&host->sdio_wlan_lock);
+        wake_lock_destroy(&host->sdio_bt_lock);
  pio_irq_free:
 	free_irq(irqres->start, host);
  irq_free:
