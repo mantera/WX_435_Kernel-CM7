@@ -68,7 +68,7 @@ static const char version[] =
 
 /* use 0 for production, 1 for verification, 2..7 for debug */
 #ifndef NET_DEBUG
-#define NET_DEBUG 1
+#define NET_DEBUG 0
 #endif
 static unsigned int net_debug = NET_DEBUG;
 #define debug net_debug

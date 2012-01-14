@@ -24,7 +24,7 @@
  */
 
 
-#define DEBUG 1
+#define DEBUG 0
 #define RX_DMA_SKBUFF 1
 #define PKT_COPY_THRESHOLD 512
 

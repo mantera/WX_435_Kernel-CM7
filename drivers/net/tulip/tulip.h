@@ -30,7 +30,7 @@
 
 
 /* undefine, or define to various debugging levels (>4 == obscene levels) */
-#define TULIP_DEBUG 1
+//#define TULIP_DEBUG 1
 
 #ifdef CONFIG_TULIP_MMIO
 #define TULIP_BAR	1	/* CBMA */

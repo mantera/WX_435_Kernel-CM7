@@ -38,7 +38,7 @@
 #include <linux/wait.h>
 
 #if defined(CONFIG_DEBUG_SLAB) || defined(CONFIG_SLUB_DEBUG_ON)
-#define DMAPOOL_DEBUG 1
+#define DMAPOOL_DEBUG 0
 #endif
 
 struct dma_pool {		/* the pool */

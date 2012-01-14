@@ -89,7 +89,7 @@ MODULE_VERSION(DRV_VERSION);
 
 /* "Knobs" for adjusting internal parameters. */
 /* Put out somewhat more debugging messages. (0 - no msg, 1 minimal msgs). */
-#define DRIVER_DEBUG 1
+#define DRIVER_DEBUG 0
 /* Some values here only for performance evaluation and path-coverage
    debugging. */
 static int rx_nocopy, rx_copy, queued_packet;

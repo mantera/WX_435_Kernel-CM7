@@ -82,7 +82,7 @@ static char *smctr_model = "Unknown";
  * 3 for very verbose debug.
  */
 #ifndef SMCTR_DEBUG
-#define SMCTR_DEBUG 1
+#define SMCTR_DEBUG 0
 #endif
 static unsigned int smctr_debug = SMCTR_DEBUG;
 

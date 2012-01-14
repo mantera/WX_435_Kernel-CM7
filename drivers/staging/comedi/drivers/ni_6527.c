@@ -38,7 +38,7 @@ Updated: Sat, 25 Jan 2003 13:24:40 -0800
 
  */
 
-#define DEBUG 1
+#define DEBUG 0
 #define DEBUG_FLAGS
 
 #include <linux/interrupt.h>

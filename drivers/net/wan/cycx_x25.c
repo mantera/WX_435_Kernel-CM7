@@ -76,7 +76,7 @@
 * 1998/08/08	acme		Initial version.
 */
 
-#define CYCLOMX_X25_DEBUG 1
+#define CYCLOMX_X25_DEBUG 0
 
 #include <linux/ctype.h>	/* isdigit() */
 #include <linux/errno.h>	/* return codes */

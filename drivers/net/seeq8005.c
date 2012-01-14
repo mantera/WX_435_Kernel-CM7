@@ -61,7 +61,7 @@ static unsigned int seeq8005_portlist[] __initdata =
 
 /* use 0 for production, 1 for verification, >2 for debug */
 #ifndef NET_DEBUG
-#define NET_DEBUG 1
+#define NET_DEBUG 0
 #endif
 static unsigned int net_debug = NET_DEBUG;
 

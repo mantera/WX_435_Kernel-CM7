@@ -121,7 +121,7 @@ static const char version[] = "NET3 PLIP version 2.4-parport gniibe@mri.co.jp\n"
 
 /* Use 0 for production, 1 for verification, >2 for debug */
 #ifndef NET_DEBUG
-#define NET_DEBUG 1
+#define NET_DEBUG 0
 #endif
 static const unsigned int net_debug = NET_DEBUG;
 

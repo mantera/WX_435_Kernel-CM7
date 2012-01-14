@@ -160,7 +160,7 @@ static struct timer_list cops_timer;
 
 /* use 0 for production, 1 for verification, 2 for debug, 3 for verbose debug */
 #ifndef COPS_DEBUG
-#define COPS_DEBUG 1 
+#define COPS_DEBUG 0
 #endif
 static unsigned int cops_debug = COPS_DEBUG;
 

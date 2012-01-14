@@ -110,7 +110,7 @@ MODULE_PARM_DESC(osrun_time, "how many seconds to wait for the ICS2115 OS");
    version.
 */
 
-#define WF_DEBUG 1
+#define WF_DEBUG 0
 
 #ifdef WF_DEBUG
 

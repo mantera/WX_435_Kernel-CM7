@@ -24,7 +24,7 @@
 /* FIHTDC, Div2-SW2-BSP Godfrey, FB0.B-396 */
 #include <media/tavarua.h>
 
-#define DEBUG 1
+#define DEBUG 0
 
 #if DEBUG
 #define DBG_MSG(msg, ...) printk("[gps_sync_DBG] %s : " msg "\n", __FUNCTION__, ## __VA_ARGS__)

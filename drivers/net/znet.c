@@ -109,7 +109,7 @@
 static char version[] __initdata = "znet.c:v1.02 9/23/94 becker@scyld.com\n";
 
 #ifndef ZNET_DEBUG
-#define ZNET_DEBUG 1
+#define ZNET_DEBUG 0
 #endif
 static unsigned int znet_debug = ZNET_DEBUG;
 module_param (znet_debug, int, 0);

@@ -57,7 +57,7 @@ AO commands are not supported.
    you the docs without one, also.
 */
 
-#define DEBUG 1
+#define DEBUG 0
 
 #include <linux/interrupt.h>
 #include "../comedidev.h"

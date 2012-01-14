@@ -75,7 +75,7 @@
 #define FORE200E         "fore200e: "
 
 #if 0 /* override .config */
-#define CONFIG_ATM_FORE200E_DEBUG 1
+#define CONFIG_ATM_FORE200E_DEBUG 0
 #endif
 #if defined(CONFIG_ATM_FORE200E_DEBUG) && (CONFIG_ATM_FORE200E_DEBUG > 0)
 #define DPRINTK(level, format, args...)  do { if (CONFIG_ATM_FORE200E_DEBUG >= (level)) \

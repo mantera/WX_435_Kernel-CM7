@@ -172,7 +172,7 @@ static inline void *rio_memcpy_fromio(void *dest, void __iomem *source, int n)
 #define rio_memcpy_fromio                      memcpy_fromio
 #endif
 
-#define DEBUG 1
+#define DEBUG 0
 
 
 /* 
