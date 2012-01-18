@@ -271,16 +271,11 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
         printk(KERN_INFO "[Touch] %s: Receive the hello packet!\n", __func__);
     }
 */
-    enable_irq(bi041p.client->irq);
 }
 
 static irqreturn_t bi041p_isr(int irq, void * handle)
 {
-    struct bi041p_info *ts = handle;
-	
-	disable_irq_nosync(bi041p.client->irq);
-	schedule_work(&ts->wqueue);
-	
+    schedule_work(&bi041p.wqueue);
     return IRQ_HANDLED;
 }
 
