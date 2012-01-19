@@ -48,6 +48,7 @@ module_param_named(
 );
 
 static struct workqueue_struct *fwupdate_wq;
+static struct workqueue_struct *bi041p_wq;
 
 struct bi041p_info {
     struct i2c_client *client;
@@ -233,7 +234,7 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
             }
 #endif
 
-        } else {  // Capacitive button pressed, optimized for Motorola Triumph
+        } else {  // Capacitive button pressed, configured only for Motorola Triumph (WX435)
                   // A.K.A. FD1_PR4/PR5 in family of similar devices
 
             if (!bIsPenUp) {
@@ -275,7 +276,9 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
 
 static irqreturn_t bi041p_isr(int irq, void * handle)
 {
-    schedule_work(&bi041p.wqueue);
+    // Use dedicated bi041p workqueue for interrupt services to get
+    // higher priority processing of normal touchscreen inputs.
+    queue_work(bi041p_wq, &bi041p.wqueue);
     return IRQ_HANDLED;
 }
 
@@ -744,6 +747,7 @@ static int bi041p_probe(struct i2c_client *client, const struct i2c_device_id *i
 	// initial IRQ
     gpio_tlmm_config(GPIO_CFG(42, 0, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA), GPIO_CFG_ENABLE);
     
+	bi041p_wq = create_singlethread_workqueue("bi041p_wq");
 	INIT_WORK(&bi041p.wqueue, bi041p_isr_workqueue);
     
     if (request_irq(bi041p.client->irq, bi041p_isr, IRQF_TRIGGER_FALLING, "bi041p", &bi041p))
@@ -815,6 +819,7 @@ err1:
 static int bi041p_remove(struct i2c_client * client)
 {
 	printk(KERN_INFO "[Touch] %s\n", __func__);
+	destroy_workqueue(bi041p_wq);
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	unregister_early_suspend(&bi041p.es);
