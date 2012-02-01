@@ -60,6 +60,56 @@ static DEFINE_IDR(battery_id);
 static DEFINE_MUTEX(battery_mutex);
 static DEFINE_MUTEX(flags_mutex);
 
+#ifdef CONFIG_HAS_EARLYSUSPEND
+
+// Note: This is initialized to zero (*not* loaded)
+static int libra_loaded = 0;
+static int wlan_locked = 0;
+static int bt_locked = 0;
+EXPORT_SYMBOL(libra_loaded);
+
+struct wake_lock wlan_lock;
+struct wake_lock bt_lock;
+
+static void btwlan_early_suspend (struct early_suspend *h) {
+
+        if (libra_loaded && !wlan_locked) {
+                wake_lock(&wlan_lock);
+                wlan_locked = 1;
+                printk("[%s] wake_lock WLAN\n", __func__);
+        }
+        if (bt_loaded && !bt_locked) {
+                wake_lock(&bt_lock);
+                bt_locked = 1;
+                printk("[%s] wake_lock Bluetooth\n", __func__);
+        }
+}
+
+static void btwlan_late_resume (struct early_suspend *h) {
+
+        if (wlan_locked) {
+                wake_unlock(&wlan_lock);
+                wlan_locked = 0;
+                printk("[%s] wake_unlock WLAN\n", __func__);
+        }
+        if (bt_locked) {
+                wake_unlock(&bt_lock);
+                bt_locked = 0;
+                printk("[%s] wake_unlock Bluetooth\n", __func__);
+        }
+}
+
+static struct early_suspend btwlan_es = {
+    .level = EARLY_SUSPEND_LEVEL_DISABLE_FB,
+    .suspend = btwlan_early_suspend,
+    .resume = btwlan_late_resume,
+};
+
+#endif
+
+
+
+
 struct bq275x0_device_info {
     struct device       *dev;
     int         id;
@@ -2019,6 +2069,9 @@ static int bq275x0_battery_probe(struct i2c_client *client,
     if (di->dbg_enable)
         dev_info(&client->dev, "[DBG MECHANISM ENABLE]\n");
     
+    wake_lock_init(&wlan_lock, WAKE_LOCK_SUSPEND, "wlan_lock");
+    wake_lock_init(&bt_lock, WAKE_LOCK_SUSPEND, "bt_lock");
+
     wake_lock_init(&di->bq275x0_wakelock, WAKE_LOCK_SUSPEND, "bq275x0");
     i2c_set_clientdata(client, di);
     device_init_wakeup(&client->dev, 1);
@@ -2062,6 +2115,7 @@ static int bq275x0_battery_probe(struct i2c_client *client,
     di->bq275x0_early_suspend.suspend = NULL;
     di->bq275x0_early_suspend.resume = bq275x0_late_resume;
     register_early_suspend(&di->bq275x0_early_suspend);
+    register_early_suspend(&btwlan_es);
 #endif
 
     INIT_DELAYED_WORK(&di->check_dfi, bq275x0_battery_check_dfi);
@@ -2169,6 +2223,7 @@ static int bq275x0_battery_remove(struct i2c_client *client)
 
 #ifdef CONFIG_HAS_EARLYSUSPEND  
     unregister_early_suspend(&di->bq275x0_early_suspend);
+    unregister_early_suspend(&btwlan_es);
 #endif
     
     bq275x0_battery_free_irq(di);
@@ -2187,6 +2242,8 @@ static int bq275x0_battery_remove(struct i2c_client *client)
     mutex_unlock(&battery_mutex);
     
     wake_lock_destroy(&di->bq275x0_wakelock);
+    wake_lock_destroy(&wlan_lock);
+    wake_lock_destroy(&bt_lock);
 
     kfree(di);
 
