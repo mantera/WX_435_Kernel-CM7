@@ -121,6 +121,8 @@ struct con_driver {
 	int flag;
 };
 
+// static DEFINE_MUTEX(vt_mutex);
+
 static struct con_driver registered_con_driver[MAX_NR_CON_DRIVER];
 const struct consw *conswitchp;
 
@@ -2566,7 +2568,7 @@ int tioclinux(struct tty_struct *tty, unsigned long arg)
 		return -EFAULT;
 	ret = 0;
 
-	lock_kernel();
+	// mutex_lock(&vt_mutex);
 
 	switch (type)
 	{
@@ -2642,7 +2644,7 @@ int tioclinux(struct tty_struct *tty, unsigned long arg)
 			ret = -EINVAL;
 			break;
 	}
-	unlock_kernel();
+	// mutex_unlock(&vt_mutex);
 	return ret;
 }
 

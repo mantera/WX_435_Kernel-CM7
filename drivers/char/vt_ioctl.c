@@ -27,7 +27,7 @@
 #include <linux/console.h>
 #include <linux/consolemap.h>
 #include <linux/signal.h>
-#include <linux/smp_lock.h>
+#include <linux/mutex.h>
 #include <linux/timex.h>
 
 #include <asm/io.h>
@@ -37,6 +37,8 @@
 #include <linux/vt_kern.h>
 #include <linux/kbd_diacr.h>
 #include <linux/selection.h>
+
+static DEFINE_MUTEX(vt_ioctl_mutex);
 
 char vt_dont_switch;
 extern struct tty_driver *console_driver;
@@ -509,7 +511,7 @@ int vt_ioctl(struct tty_struct *tty, struct file * file,
 
 	console = vc->vc_num;
 
-	lock_kernel();
+	mutex_lock(&vt_ioctl_mutex);
 
 	if (!vc_cons_allocated(console)) { 	/* impossible? */
 		ret = -ENOIOCTLCMD;
@@ -1334,7 +1336,7 @@ int vt_ioctl(struct tty_struct *tty, struct file * file,
 		ret = -ENOIOCTLCMD;
 	}
 out:
-	unlock_kernel();
+	mutex_unlock(&vt_ioctl_mutex);
 	return ret;
 eperm:
 	ret = -EPERM;
@@ -1501,7 +1503,7 @@ long vt_compat_ioctl(struct tty_struct *tty, struct file * file,
 
 	console = vc->vc_num;
 
-	lock_kernel();
+	mutex_lock(&vt_ioctl_mutex);
 
 	if (!vc_cons_allocated(console)) { 	/* impossible? */
 		ret = -ENOIOCTLCMD;
@@ -1569,11 +1571,11 @@ long vt_compat_ioctl(struct tty_struct *tty, struct file * file,
 		goto fallback;
 	}
 out:
-	unlock_kernel();
+	mutex_unlock(&vt_ioctl_mutex);
 	return ret;
 
 fallback:
-	unlock_kernel();
+	mutex_unlock(&vt_ioctl_mutex);
 	return vt_ioctl(tty, file, cmd, arg);
 }
 
@@ -1759,10 +1761,13 @@ int vt_move_to_console(unsigned int vt, int alloc)
 		return -EIO;
 	}
 	release_console_sem();
+	mutex_lock(&vt_ioctl_mutex);
 	if (vt_waitactive(vt + 1)) {
 		pr_debug("Suspend: Can't switch VCs.");
+		mutex_unlock(&vt_ioctl_mutex);
 		return -EINTR;
 	}
+	mutex_unlock(&vt_ioctl_mutex);
 	return prev;
 }
 

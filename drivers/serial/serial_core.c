@@ -1367,7 +1367,7 @@ static void uart_wait_until_sent(struct tty_struct *tty, int timeout)
 	if (port->type == PORT_UNKNOWN || port->fifosize == 0)
 		return;
 
-	lock_kernel();
+	// lock_kernel();
 
 	/*
 	 * Set the check interval to be 1/5 of the estimated time to
@@ -1414,7 +1414,7 @@ static void uart_wait_until_sent(struct tty_struct *tty, int timeout)
 			break;
 	}
 	set_current_state(TASK_RUNNING); /* might not be needed */
-	unlock_kernel();
+	// unlock_kernel();
 }
 
 /*

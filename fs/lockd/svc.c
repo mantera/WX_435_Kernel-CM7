@@ -138,7 +138,7 @@ lockd(void *vrqstp)
 	 * seen some handwavy posts about posix locking needing to be
 	 * done under the BKL, but it's far from clear.
 	 */
-	lock_kernel();
+	// lock_kernel();
 
 	if (!nlm_timeout)
 		nlm_timeout = LOCKD_DFLT_TIMEO;
@@ -196,7 +196,7 @@ lockd(void *vrqstp)
 	if (nlmsvc_ops)
 		nlmsvc_invalidate_all();
 	nlm_shutdown_hosts();
-	unlock_kernel();
+	// unlock_kernel();
 	return 0;
 }
 

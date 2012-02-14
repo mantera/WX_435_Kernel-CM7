@@ -599,7 +599,7 @@ static void ext4_put_super(struct super_block *sb)
 	destroy_workqueue(sbi->dio_unwritten_wq);
 
 	lock_super(sb);
-	lock_kernel();
+	// lock_kernel();
 	if (sb->s_dirt)
 		ext4_commit_super(sb, 1);
 
@@ -667,7 +667,7 @@ static void ext4_put_super(struct super_block *sb)
 	 * Now that we are completely done shutting down the
 	 * superblock, we need to actually destroy the kobject.
 	 */
-	unlock_kernel();
+	// unlock_kernel();
 	unlock_super(sb);
 	kobject_put(&sbi->s_kobj);
 	wait_for_completion(&sbi->s_kobj_unregister);
@@ -2374,7 +2374,7 @@ static int ext4_fill_super(struct super_block *sb, void *data, int silent)
 	sbi->s_sectors_written_start = part_stat_read(sb->s_bdev->bd_part,
 						      sectors[1]);
 
-	unlock_kernel();
+	// unlock_kernel();
 
 	/* Cleanup superblock name */
 	for (cp = sb->s_id; (cp = strchr(cp, '/'));)
@@ -2946,7 +2946,7 @@ no_journal:
 
 	ext4_msg(sb, KERN_INFO, "mounted filesystem with%s", descr);
 
-	lock_kernel();
+	// lock_kernel();
 	return 0;
 
 cantfind_ext4:
@@ -2992,7 +2992,7 @@ out_fail:
 	sb->s_fs_info = NULL;
 	kfree(sbi->s_blockgroup_lock);
 	kfree(sbi);
-	lock_kernel();
+	// lock_kernel();
 	return ret;
 }
 
@@ -3486,7 +3486,7 @@ static int ext4_remount(struct super_block *sb, int *flags, char *data)
 	int i;
 #endif
 
-	lock_kernel();
+	// lock_kernel();
 
 	/* Store the original options */
 	lock_super(sb);
@@ -3617,7 +3617,7 @@ static int ext4_remount(struct super_block *sb, int *flags, char *data)
 			kfree(old_opts.s_qf_names[i]);
 #endif
 	unlock_super(sb);
-	unlock_kernel();
+	// unlock_kernel();
 	return 0;
 
 restore_opts:
@@ -3638,7 +3638,7 @@ restore_opts:
 	}
 #endif
 	unlock_super(sb);
-	unlock_kernel();
+	// unlock_kernel();
 	return err;
 }
 

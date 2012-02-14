@@ -913,7 +913,7 @@ static int memory_open(struct inode *inode, struct file *filp)
 	const struct memdev *dev;
 	int ret = -ENXIO;
 
-	lock_kernel();
+	// lock_kernel();
 
 	minor = iminor(inode);
 	if (minor >= ARRAY_SIZE(devlist))
@@ -932,7 +932,7 @@ static int memory_open(struct inode *inode, struct file *filp)
 	else
 		ret = 0;
 out:
-	unlock_kernel();
+	// unlock_kernel();
 	return ret;
 }
 

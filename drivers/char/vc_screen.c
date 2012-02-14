@@ -45,6 +45,8 @@
 #undef addr
 #define HEADER_SIZE	4
 
+static DEFINE_MUTEX(vc_screen_mutex);
+
 static int
 vcs_size(struct inode *inode)
 {
@@ -463,10 +465,10 @@ vcs_open(struct inode *inode, struct file *filp)
 	unsigned int currcons = iminor(inode) & 127;
 	int ret = 0;
 	
-	lock_kernel();
+	mutex_lock(&vc_screen_mutex);
 	if(currcons && !vc_cons_allocated(currcons-1))
 		ret = -ENXIO;
-	unlock_kernel();
+	mutex_unlock(&vc_screen_mutex);
 	return ret;
 }
 

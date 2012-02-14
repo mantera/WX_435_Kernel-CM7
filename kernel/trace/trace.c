@@ -636,7 +636,7 @@ __acquires(kernel_lock)
 	 * need to disable and enable preemption for successful tests.
 	 * So we drop the BKL here and grab it after the tests again.
 	 */
-	unlock_kernel();
+	// unlock_kernel();
 	mutex_lock(&trace_types_lock);
 
 	tracing_selftest_running = true;
@@ -718,7 +718,7 @@ __acquires(kernel_lock)
 #endif
 
  out_unlock:
-	lock_kernel();
+	// lock_kernel();
 	return ret;
 }
 
