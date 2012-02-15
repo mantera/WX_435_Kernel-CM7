@@ -629,11 +629,12 @@ static int process_ctl_pkt(void *pkt, int size, int copy)
 	uint32_t id;
 	void *temp_pkt;
 #if defined (CONFIG_MSM_SDIO_CTL_DEBUG)
-	char *dump_buf = (char *)pkt;
+/* commenting these next declarations out since they are not used - mantera */
+//  char *dump_buf = (char *)pkt;
 #endif
 	unsigned long flags;
 
-	D_DUMP_BUFFER("process_ctl_pkt:", size, dump_buf);
+//	D_DUMP_BUFFER("process_ctl_pkt:", size, dump_buf);
 	mux_hdr = (struct sdio_cmux_hdr *)pkt;
 	switch (mux_hdr->cmd) {
 	case OPEN:
