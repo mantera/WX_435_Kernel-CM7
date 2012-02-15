@@ -23,10 +23,8 @@ extern int bq275x0_battery_elan_update_mode;
 
 // flag of HW type
 static int hw_ver = HW_UNKNOW;
-static int bi041p_debug = 0;
-static bool bIsPenUp = 1;
-static int fw_delay = 100;
-static int update_mode = 0;
+// static int bi041p_debug = 0;
+static bool bTouch2 = 0;
 #ifdef CONFIG_FIH_FTM
 static int file_path = 0;
 static int ftm_fw_update_result = 0;
@@ -123,17 +121,7 @@ static int bi041p_get_fw_version(void)
 /*
  * Keep the the Interrupt Service Request (ISR) workqueue as efficient as
  * possible so that the driver doesn't slow down other parts of the system
- * when under heavy load (i.e. gaming). This also increases reliability of
- * touchscreen responses. Main changes from stock are:
- *  1. Commented out the debug mode checks in case the compiler
- *     doesn't optimize them out.
- *  2. Consolidated the bIsPenUp assignments.
- *  3. Removed abs() call for y coordinate calculations (unnecessary)
- *  4. Removed "hello packet" check & reporting (only triggered when
- *     coming out of suspend mode)
- *  5. Consolidated virtual_button & resetting capkey flags code
- *  6. Removed checks for other HW devices, which had problems
- *     of checking for one cap button flag & resetting a different one.
+ * when under heavy load (i.e. gaming).
  */
 #define XCORD1(x) ((((int)((x)[1]) & 0xF0) << 4) + ((int)((x)[2])))
 #define YCORD1(y) ((((int)((y)[1]) & 0x0F) << 8) + ((int)((y)[3])))
@@ -142,7 +130,7 @@ static int bi041p_get_fw_version(void)
 
 static void bi041p_isr_workqueue(struct work_struct *work) {
     u8 buffer[9];
-    int cnt, virtual_button;
+    int cnt, cap_button;
     int retry = 3;
 
     do {
@@ -163,27 +151,10 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
 */
 
     if (buffer[0] == 0x5A) {
-        cnt = (buffer[8] ^ 0x01) >> 1;
-        virtual_button = (buffer[8]) >> 3;
+        cnt = (buffer[8]) >> 1;
+        cap_button = (buffer[8]) >> 4;
 
-        if (virtual_button == 0) {   // Touchscreen Pressed
-
-            if (bBackCapKeyPressed) {
-                input_report_key(bi041p.input, KEY_BACK, 0);
-                bBackCapKeyPressed = 0;
-
-            } else if (bMenuCapKeyPressed) {
-                input_report_key(bi041p.input, KEY_MENU, 0);
-                bMenuCapKeyPressed = 0;
-
-            } else if (bHomeCapKeyPressed) {
-                input_report_key(bi041p.input, KEY_HOME, 0);
-                bHomeCapKeyPressed = 0;
-
-            } else if (bSearchCapKeyPressed) {
-                input_report_key(bi041p.input, KEY_SEARCH, 0);
-                bSearchCapKeyPressed = 0;
-            }
+        if (cap_button == 0) {   // Touchscreen Pressed
 
 #ifdef CONFIG_FIH_FTM
             if (cnt) {
@@ -203,19 +174,9 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
                 input_report_abs(bi041p.input, ABS_PRESSURE, 255);
                 input_report_key(bi041p.input, BTN_TOUCH, 1);
                 input_mt_sync(bi041p.input);
-                bIsPenUp = 0;
-//                if (bi041p_debug)
-//                    printk(KERN_INFO "[Touch] %s: Pen Down.\n", __func__);
             } else {        // First touch released
                 input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 0);
-                input_report_abs(bi041p.input, ABS_MT_POSITION_X, XCORD1(buffer));
-                input_report_abs(bi041p.input, ABS_MT_POSITION_Y, TS_MAX_Y - YCORD1(buffer));
-                input_report_abs(bi041p.input, ABS_PRESSURE, 0);
-                input_report_key(bi041p.input, BTN_TOUCH, 0);
                 input_mt_sync(bi041p.input);
-                bIsPenUp = 1;
-//                if (bi041p_debug)
-//                    printk(KERN_INFO "[Touch] %s: Pen Up.\n", __func__);
             }
             if (cnt > 1) {  // Second touch
                 input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 255);
@@ -224,48 +185,54 @@ static void bi041p_isr_workqueue(struct work_struct *work) {
                 input_report_abs(bi041p.input, ABS_PRESSURE, 255);
                 input_report_key(bi041p.input, BTN_TOUCH, 1);
                 input_mt_sync(bi041p.input);
-            } else {        // Second touch released
+                bTouch2 = 1;
+            } else if (bTouch2) {        // Second touch released
                 input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 0);
-                input_report_abs(bi041p.input, ABS_MT_POSITION_X, XCORD2(buffer));
-                input_report_abs(bi041p.input, ABS_MT_POSITION_Y, TS_MAX_Y - YCORD2(buffer));
-                input_report_abs(bi041p.input, ABS_PRESSURE, 0);
-                input_report_key(bi041p.input, BTN_TOUCH, 0);
                 input_mt_sync(bi041p.input);
+                bTouch2 = 0;
             }
 #endif
-
-        } else {  // Capacitive button pressed, configured only for Motorola Triumph (WX435)
-                  // A.K.A. FD1_PR4/PR5 in family of similar devices
-
-            if (!bIsPenUp) {
-                input_report_abs(bi041p.input, ABS_MT_TOUCH_MAJOR, 0);
-                input_report_abs(bi041p.input, ABS_PRESSURE, 0);
-                input_report_key(bi041p.input, BTN_TOUCH, 0);
-                input_mt_sync(bi041p.input);
-                bIsPenUp = 1;
-            }
-
-            if (virtual_button == 2 && !bMenuCapKeyPressed) {
+        } else if (cap_button == 1) {
+            if (hw_ver == HW_FD1_PR3 || hw_ver == HW_FD1_PR4)
                 input_report_key(bi041p.input, KEY_MENU, 1);
-                bMenuCapKeyPressed = 1;
-
-            } else if (virtual_button == 4 && !bHomeCapKeyPressed) {
-                input_report_key(bi041p.input, KEY_HOME, 1);
-                bHomeCapKeyPressed = 1;
-
-            } else if (virtual_button == 8 && !bBackCapKeyPressed) {
+            else
                 input_report_key(bi041p.input, KEY_BACK, 1);
-                bBackCapKeyPressed = 1;
+            goto sync_out;
 
-            } else if (virtual_button == 16 && !bSearchCapKeyPressed) {
+        } else if (cap_button == 2) {
+            if (hw_ver == HW_FD1_PR3 || hw_ver == HW_FD1_PR4)
+                input_report_key(bi041p.input, KEY_HOME, 1);
+            else
+                input_report_key(bi041p.input, KEY_MENU, 1);
+            goto sync_out;
+
+        } else if (cap_button == 4) {
+            if (hw_ver == HW_FD1_PR3)
                 input_report_key(bi041p.input, KEY_SEARCH, 1);
-                bSearchCapKeyPressed = 1;
-            }
-	}
+            else if (hw_ver == HW_FD1_PR4)
+                input_report_key(bi041p.input, KEY_BACK, 1);
+            else
+                input_report_key(bi041p.input, KEY_HOME, 1);
+            goto sync_out;
+
+        } else if (cap_button == 8) {
+            if (hw_ver == HW_FD1_PR3)
+                input_report_key(bi041p.input, KEY_BACK, 1);
+            else
+                input_report_key(bi041p.input, KEY_SEARCH, 1);
+            goto sync_out;
+        }
+
+        input_report_key(bi041p.input, KEY_BACK, 0);
+        input_report_key(bi041p.input, KEY_MENU, 0);
+        input_report_key(bi041p.input, KEY_HOME, 0);
+        input_report_key(bi041p.input, KEY_SEARCH, 0);
+
+sync_out:
 	input_sync(bi041p.input);
     }
 /*
- * Leave this out of production code for efficiency
+ * Leave this out of production code
  *
     else if ((buffer[0] == 0x55) && (buffer[1] == 0x55) &&
              (buffer[2] == 0x55) && (buffer[3] == 0x55)) {
@@ -899,7 +866,7 @@ static void __exit bi041p_exit(void)
 module_init(bi041p_init);
 module_exit(bi041p_exit);
 
-MODULE_DESCRIPTION("ELAN BI041P-T02XB01U driver");
+MODULE_DESCRIPTION("ELAN BI041P-T02XB01U driver Heavily modified");
 MODULE_AUTHOR("FIH Div2 SW2 BSP");
 MODULE_LICENSE("GPL");
 
