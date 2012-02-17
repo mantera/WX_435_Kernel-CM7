@@ -129,7 +129,6 @@ static int __snd_open(struct inode *inode, struct file *file)
 
 	if (minor >= ARRAY_SIZE(snd_minors))
 		return -ENODEV;
-        mutex_lock(&sound_mutex);
 	mptr = snd_minors[minor];
 	if (mptr == NULL) {
 #ifdef CONFIG_MODULES
@@ -149,17 +148,14 @@ static int __snd_open(struct inode *inode, struct file *file)
 		if (mptr == NULL)
 #endif
 #endif
-			mutex_unlock(&sound_mutex);
 			return -ENODEV;
 	}
 	old_fops = file->f_op;
 	file->f_op = fops_get(mptr->f_ops);
 	if (file->f_op == NULL) {
 		file->f_op = old_fops;
-		mutex_unlock(&sound_mutex);
 		return -ENODEV;
 	}
-	mutex_unlock(&sound_mutex);
 	if (file->f_op->open)
 		err = file->f_op->open(inode, file);
 	if (err) {
@@ -176,7 +172,9 @@ static int snd_open(struct inode *inode, struct file *file)
 {
 	int ret;
 
+	lock_kernel();
 	ret = __snd_open(inode, file);
+	unlock_kernel();
 	return ret;
 }
 

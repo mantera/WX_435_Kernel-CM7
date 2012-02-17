@@ -167,7 +167,7 @@ static loff_t snd_info_entry_llseek(struct file *file, loff_t offset, int orig)
 
 	data = file->private_data;
 	entry = data->entry;
-	mutex_lock(&entry->access);
+	lock_kernel();
 	switch (entry->content) {
 	case SNDRV_INFO_CONTENT_TEXT:
 		switch (orig) {
@@ -196,7 +196,7 @@ static loff_t snd_info_entry_llseek(struct file *file, loff_t offset, int orig)
 	}
 	ret = -ENXIO;
 out:
-	mutex_unlock(&entry->access);
+	unlock_kernel();
 	return ret;
 }
 

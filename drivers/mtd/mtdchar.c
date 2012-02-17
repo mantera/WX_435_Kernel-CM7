@@ -12,7 +12,6 @@
 #include <linux/module.h>
 #include <linux/slab.h>
 #include <linux/sched.h>
-#include <linux/mutex.h>
 #include <linux/smp_lock.h>
 #include <linux/backing-dev.h>
 #include <linux/compat.h>
@@ -23,7 +22,6 @@
 
 #include <asm/uaccess.h>
 
-static DEFINE_MUTEX(mtd_mutex);
 
 /*
  * Data structure to hold the pointer to the mtd device as well
@@ -77,7 +75,7 @@ static int mtd_open(struct inode *inode, struct file *file)
 	if ((file->f_mode & FMODE_WRITE) && (minor & 1))
 		return -EACCES;
 
-	mutex_lock(&mtd_mutex);
+	lock_kernel();
 	mtd = get_mtd_device(NULL, devnum);
 
 	if (IS_ERR(mtd)) {
@@ -111,7 +109,7 @@ static int mtd_open(struct inode *inode, struct file *file)
 	file->private_data = mfi;
 
 out:
-	mutex_unlock(&mtd_mutex);
+	unlock_kernel();
 	return ret;
 } /* mtd_open */
 
@@ -848,7 +846,7 @@ static long mtd_compat_ioctl(struct file *file, unsigned int cmd,
 	void __user *argp = compat_ptr(arg);
 	int ret = 0;
 
-	mutex_lock(&mtd_mutex);
+	lock_kernel();
 
 	switch (cmd) {
 	case MEMWRITEOOB32:
@@ -883,7 +881,7 @@ static long mtd_compat_ioctl(struct file *file, unsigned int cmd,
 		ret = mtd_ioctl(inode, file, cmd, (unsigned long)argp);
 	}
 
-	mutex_unlock(&mtd_mutex);
+	unlock_kernel();
 
 	return ret;
 }

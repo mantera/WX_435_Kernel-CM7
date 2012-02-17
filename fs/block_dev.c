@@ -1180,7 +1180,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
 		return ret;
 	}
 
-	// lock_kernel();
+	lock_kernel();
  restart:
 
 	ret = -ENXIO;
@@ -1266,7 +1266,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
 	if (for_part)
 		bdev->bd_part_count++;
 	mutex_unlock(&bdev->bd_mutex);
-	// unlock_kernel();
+	unlock_kernel();
 	return 0;
 
  out_clear:
@@ -1280,7 +1280,7 @@ static int __blkdev_get(struct block_device *bdev, fmode_t mode, int for_part)
  out_unlock_bdev:
 	mutex_unlock(&bdev->bd_mutex);
  out_unlock_kernel:
-	// unlock_kernel();
+	unlock_kernel();
 
 	if (disk)
 		module_put(disk->fops->owner);
@@ -1346,7 +1346,7 @@ static int __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part)
 	struct block_device *victim = NULL;
 
 	mutex_lock_nested(&bdev->bd_mutex, for_part);
-	// lock_kernel();
+	lock_kernel();
 	if (for_part)
 		bdev->bd_part_count--;
 
@@ -1371,7 +1371,7 @@ static int __blkdev_put(struct block_device *bdev, fmode_t mode, int for_part)
 			victim = bdev->bd_contains;
 		bdev->bd_contains = NULL;
 	}
-	// unlock_kernel();
+	unlock_kernel();
 	mutex_unlock(&bdev->bd_mutex);
 	bdput(bdev);
 	if (victim)

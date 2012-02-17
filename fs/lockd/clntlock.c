@@ -218,7 +218,7 @@ reclaimer(void *ptr)
 
 	/* This one ensures that our parent doesn't terminate while the
 	 * reclaim is in progress */
-	// lock_kernel();
+	lock_kernel();
 	lockd_up();	/* note: this cannot fail as lockd is already running */
 
 	dprintk("lockd: reclaiming locks for host %s\n", host->h_name);
@@ -269,6 +269,6 @@ restart:
 	/* Release host handle after use */
 	nlm_release_host(host);
 	lockd_down();
-	// unlock_kernel();
+	unlock_kernel();
 	return 0;
 }

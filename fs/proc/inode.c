@@ -254,9 +254,9 @@ static long proc_reg_unlocked_ioctl(struct file *file, unsigned int cmd, unsigne
 		if (rv == -ENOIOCTLCMD)
 			rv = -EINVAL;
 	} else if (ioctl) {
-		spin_lock(&pde->pde_unload_lock);
+		lock_kernel();
 		rv = ioctl(file->f_path.dentry->d_inode, file, cmd, arg);
-		spin_unlock(&pde->pde_unload_lock);
+		unlock_kernel();
 	}
 
 	pde_users_dec(pde);

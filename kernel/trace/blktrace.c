@@ -1579,10 +1579,10 @@ static ssize_t sysfs_blk_trace_attr_show(struct device *dev,
 	struct block_device *bdev;
 	ssize_t ret = -ENXIO;
 
-	// lock_kernel();
+	lock_kernel();
 	bdev = bdget(part_devt(p));
 	if (bdev == NULL)
-		goto out;
+		goto out_unlock_kernel;
 
 	q = blk_trace_get_queue(bdev);
 	if (q == NULL)
@@ -1610,8 +1610,8 @@ out_unlock_bdev:
 	mutex_unlock(&bdev->bd_mutex);
 out_bdput:
 	bdput(bdev);
-out:
-	// unlock_kernel();
+out_unlock_kernel:
+	unlock_kernel();
 	return ret;
 }
 
@@ -1641,11 +1641,11 @@ static ssize_t sysfs_blk_trace_attr_store(struct device *dev,
 
 	ret = -ENXIO;
 
-	// lock_kernel();
+	lock_kernel();
 	p = dev_to_part(dev);
 	bdev = bdget(part_devt(p));
 	if (bdev == NULL)
-		goto out;
+		goto out_unlock_kernel;
 
 	q = blk_trace_get_queue(bdev);
 	if (q == NULL)
@@ -1680,8 +1680,9 @@ out_unlock_bdev:
 	mutex_unlock(&bdev->bd_mutex);
 out_bdput:
 	bdput(bdev);
+out_unlock_kernel:
+	unlock_kernel();
 out:
-	// unlock_kernel();
 	return ret ? ret : count;
 }
 

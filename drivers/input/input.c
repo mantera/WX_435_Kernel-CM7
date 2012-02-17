@@ -1234,7 +1234,7 @@ static ssize_t input_dev_show_cap_##bm(struct device *dev,		\
 {									\
 	struct input_dev *input_dev = to_input_dev(dev);		\
 	int len = input_print_bitmap(buf, PAGE_SIZE,			\
-				     input_dev->bm##bit, ev##_MAX, true);	\
+				     input_dev->bm##bit, ev##_MAX, 1);	\
 	return min_t(int, len, PAGE_SIZE);				\
 }									\
 static DEVICE_ATTR(bm, S_IRUGO, input_dev_show_cap_##bm, NULL)
@@ -1298,7 +1298,7 @@ static int input_add_uevent_bm_var(struct kobj_uevent_env *env,
 
 	len = input_print_bitmap(&env->buf[env->buflen - 1],
 				 sizeof(env->buf) - env->buflen,
-				 bitmap, max, false);
+				 bitmap, max, 0);
 	if (len >= (sizeof(env->buf) - env->buflen))
 		return -ENOMEM;
 
@@ -1780,7 +1780,7 @@ int input_register_handle(struct input_handle *handle)
 	 * we can't be racing with input_unregister_handle()
 	 * and so separate lock is not needed here.
 	 */
-	list_add_tail_rcu(&handle->h_node, &handler->h_list);
+	list_add_tail(&handle->h_node, &handler->h_list);
 
 	if (handler->start)
 		handler->start(handle);
@@ -1803,7 +1803,7 @@ void input_unregister_handle(struct input_handle *handle)
 {
 	struct input_dev *dev = handle->dev;
 
-	list_del_rcu(&handle->h_node);
+	list_del_init(&handle->h_node);
 
 	/*
 	 * Take dev->mutex to prevent race with input_release_device().
@@ -1821,21 +1821,19 @@ static int input_open_file(struct inode *inode, struct file *file)
 	const struct file_operations *old_fops, *new_fops = NULL;
 	int err;
 
-        err = mutex_lock_interruptible(&input_mutex);
-        if (err)
-            return err;
-
+	lock_kernel();
 	/* No load-on-demand here? */
 	handler = input_table[iminor(inode) >> 5];
-        if (handler)
-               new_fops = fops_get(handler->fops);
+	if (!handler || !(new_fops = fops_get(handler->fops))) {
+		err = -ENODEV;
+		goto out;
+	}
 
-        mutex_unlock(&input_mutex);
 	/*
 	 * That's _really_ odd. Usually NULL ->open means "nothing special",
 	 * not "no device". Oh, well...
 	 */
-        if (!new_fops || !new_fops->open) {
+	if (!new_fops->open) {
 		fops_put(new_fops);
 		err = -ENODEV;
 		goto out;
@@ -1851,6 +1849,7 @@ static int input_open_file(struct inode *inode, struct file *file)
 	}
 	fops_put(old_fops);
 out:
+	unlock_kernel();
 	return err;
 }
 

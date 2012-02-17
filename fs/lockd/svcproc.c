@@ -265,9 +265,9 @@ static void nlmsvc_callback_exit(struct rpc_task *task, void *data)
 
 static void nlmsvc_callback_release(void *data)
 {
-	// lock_kernel();
+	lock_kernel();
 	nlm_release_call(data);
-	// unlock_kernel();
+	unlock_kernel();
 }
 
 static const struct rpc_call_ops nlmsvc_callback_ops = {

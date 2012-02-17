@@ -107,7 +107,7 @@ loff_t default_llseek(struct file *file, loff_t offset, int origin)
 {
 	loff_t retval;
 
-	mutex_lock(&file->f_dentry->d_inode->i_mutex);
+	lock_kernel();
 	switch (origin) {
 		case SEEK_END:
 			offset += i_size_read(file->f_path.dentry->d_inode);
@@ -128,7 +128,7 @@ loff_t default_llseek(struct file *file, loff_t offset, int origin)
 		retval = offset;
 	}
 out:
-	mutex_unlock(&file->f_dentry->d_inode->i_mutex);
+	unlock_kernel();
 	return retval;
 }
 EXPORT_SYMBOL(default_llseek);

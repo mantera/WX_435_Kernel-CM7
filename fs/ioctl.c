@@ -19,8 +19,6 @@
 
 #include <asm/ioctls.h>
 
-static DEFINE_MUTEX(fs_ioctl_mutex);
-
 /* So that the fiemap access checks can't overflow on 32 bit machines. */
 #define FIEMAP_MAX_EXTENTS	(UINT_MAX / sizeof(struct fiemap_extent))
 
@@ -50,10 +48,10 @@ static long vfs_ioctl(struct file *filp, unsigned int cmd,
 			error = -EINVAL;
 		goto out;
 	} else if (filp->f_op->ioctl) {
-		mutex_lock(&fs_ioctl_mutex);
+		lock_kernel();
 		error = filp->f_op->ioctl(filp->f_path.dentry->d_inode,
 					  filp, cmd, arg);
-		mutex_unlock(&fs_ioctl_mutex);
+		unlock_kernel();
 	}
 
  out:

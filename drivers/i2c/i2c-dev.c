@@ -447,7 +447,7 @@ static int i2cdev_open(struct inode *inode, struct file *file)
 	struct i2c_dev *i2c_dev;
 	int ret = 0;
 
-	// lock_kernel();
+	lock_kernel();
 	i2c_dev = i2c_dev_get_by_minor(minor);
 	if (!i2c_dev) {
 		ret = -ENODEV;
@@ -480,7 +480,7 @@ static int i2cdev_open(struct inode *inode, struct file *file)
 	file->private_data = client;
 
 out:
-	// unlock_kernel();
+	unlock_kernel();
 	return ret;
 }
 

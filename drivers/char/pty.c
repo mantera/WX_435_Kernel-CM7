@@ -23,7 +23,7 @@
 #include <linux/major.h>
 #include <linux/mm.h>
 #include <linux/init.h>
-#include <linux/mutex.h>
+#include <linux/smp_lock.h>
 #include <linux/sysctl.h>
 #include <linux/device.h>
 #include <linux/uaccess.h>
@@ -31,8 +31,6 @@
 #include <linux/devpts_fs.h>
 
 #include <asm/system.h>
-
-static DEFINE_MUTEX(pty_mutex);
 
 #ifdef CONFIG_UNIX98_PTYS
 static struct tty_driver *ptm_driver;
@@ -678,9 +676,9 @@ static int ptmx_open(struct inode *inode, struct file *filp)
 {
 	int ret;
 
-	mutex_lock(&pty_mutex);
+	lock_kernel();
 	ret = __ptmx_open(inode, filp);
-	mutex_unlock(&pty_mutex);
+	unlock_kernel();
 	return ret;
 }
 

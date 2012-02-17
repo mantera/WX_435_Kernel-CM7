@@ -3225,7 +3225,7 @@ static int snd_pcm_fasync(int fd, struct file * file, int on)
 	struct snd_pcm_runtime *runtime;
 	int err = -ENXIO;
 
-	// lock_kernel();
+	lock_kernel();
 	pcm_file = file->private_data;
 	substream = pcm_file->substream;
 	if (PCM_RUNTIME_CHECK(substream))
@@ -3233,7 +3233,7 @@ static int snd_pcm_fasync(int fd, struct file * file, int on)
 	runtime = substream->runtime;
 	err = fasync_helper(fd, file, on, &runtime->fasync);
 out:
-	// unlock_kernel();
+	unlock_kernel();
 	return err;
 }
 

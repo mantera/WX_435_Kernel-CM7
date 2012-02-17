@@ -403,10 +403,10 @@ static int pm_qos_power_open(struct inode *inode, struct file *filp)
 	if (!usr)
 		return -ENOMEM;
 
-	// lock_kernel();
+	lock_kernel();
 	pm_qos_class = find_pm_qos_object_by_minor(iminor(inode));
 	if (pm_qos_class < 0) {
-		// unlock_kernel();
+		unlock_kernel();
 		kfree(usr);
 		return -EPERM;
 	}
@@ -417,7 +417,7 @@ static int pm_qos_power_open(struct inode *inode, struct file *filp)
 
 	ret = pm_qos_add_requirement(usr->pm_qos_class, usr->name,
 			PM_QOS_DEFAULT_VALUE);
-	// unlock_kernel();
+	unlock_kernel();
 
 	if (ret < 0) {
 		kfree(usr);

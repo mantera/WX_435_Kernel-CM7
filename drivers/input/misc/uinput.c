@@ -284,7 +284,7 @@ static int uinput_open(struct inode *inode, struct file *file)
 	if (!newdev)
 		return -ENOMEM;
 
-	// lock_kernel();
+	lock_kernel();
 	mutex_init(&newdev->mutex);
 	spin_lock_init(&newdev->requests_lock);
 	init_waitqueue_head(&newdev->requests_waitq);
@@ -292,7 +292,7 @@ static int uinput_open(struct inode *inode, struct file *file)
 	newdev->state = UIST_NEW_DEVICE;
 
 	file->private_data = newdev;
-	// unlock_kernel();
+	unlock_kernel();
 
 	return 0;
 }
