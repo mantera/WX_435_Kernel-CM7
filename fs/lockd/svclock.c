@@ -51,6 +51,7 @@ static const struct rpc_call_ops nlmsvc_grant_ops;
  * The list of blocked locks to retry
  */
 static LIST_HEAD(nlm_blocked);
+static DEFINE_SPINLOCK(nlm_blocked_lock);
 
 /*
  * Insert a blocked lock into the global list
@@ -650,7 +651,7 @@ static int nlmsvc_grant_deferred(struct file_lock *fl, struct file_lock *conf,
 	struct nlm_block *block;
 	int rc = -ENOENT;
 
-	lock_kernel();
+	spin_lock(&nlm_blocked_lock);
 	list_for_each_entry(block, &nlm_blocked, b_list) {
 		if (nlm_compare_locks(&block->b_call->a_args.lock.fl, fl)) {
 			dprintk("lockd: nlmsvc_notify_blocked block %p flags %d\n",
@@ -670,7 +671,7 @@ static int nlmsvc_grant_deferred(struct file_lock *fl, struct file_lock *conf,
 			break;
 		}
 	}
-	unlock_kernel();
+	spin_unlock(&nlm_blocked_lock);
 	if (rc == -ENOENT)
 		printk(KERN_WARNING "lockd: grant for unknown block\n");
 	return rc;
@@ -802,7 +803,7 @@ static void nlmsvc_grant_callback(struct rpc_task *task, void *data)
 
 	dprintk("lockd: GRANT_MSG RPC callback\n");
 
-	lock_kernel();
+	spin_lock(&nlm_blocked_lock);
 	/* if the block is not on a list at this point then it has
 	 * been invalidated. Don't try to requeue it.
 	 *
@@ -827,16 +828,16 @@ static void nlmsvc_grant_callback(struct rpc_task *task, void *data)
 	nlmsvc_insert_block(block, timeout);
 	svc_wake_up(block->b_daemon);
 out:
-	unlock_kernel();
+	spin_unlock(&nlm_blocked_lock);
 }
 
 static void nlmsvc_grant_release(void *data)
 {
 	struct nlm_rqst		*call = data;
 
-	lock_kernel();
+	// lock_kernel();
 	nlmsvc_release_block(call->a_block);
-	unlock_kernel();
+	// unlock_kernel();
 }
 
 static const struct rpc_call_ops nlmsvc_grant_ops = {

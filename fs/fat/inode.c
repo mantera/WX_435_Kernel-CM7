@@ -467,7 +467,7 @@ static void fat_put_super(struct super_block *sb)
 {
 	struct msdos_sb_info *sbi = MSDOS_SB(sb);
 
-	lock_kernel();
+	// lock_kernel();
 
 	if (sb->s_dirt)
 		fat_write_super(sb);
@@ -483,7 +483,7 @@ static void fat_put_super(struct super_block *sb)
 	sb->s_fs_info = NULL;
 	kfree(sbi);
 
-	unlock_kernel();
+	// unlock_kernel();
 }
 
 static struct kmem_cache *fat_inode_cachep;

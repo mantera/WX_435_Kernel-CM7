@@ -201,7 +201,7 @@ cifs_put_super(struct super_block *sb)
 		return;
 	}
 
-	lock_kernel();
+	// lock_kernel();
 
 	rc = cifs_umount(sb, cifs_sb);
 	if (rc)
@@ -216,7 +216,7 @@ cifs_put_super(struct super_block *sb)
 	unload_nls(cifs_sb->local_nls);
 	kfree(cifs_sb);
 
-	unlock_kernel();
+	// unlock_kernel();
 }
 
 static int
