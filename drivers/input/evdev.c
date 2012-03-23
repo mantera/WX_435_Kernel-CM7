@@ -21,7 +21,6 @@
 #include <linux/major.h>
 #include <linux/device.h>
 #include <linux/wakelock.h>
-#include <linux/string.h>
 #include "input-compat.h"
 
 struct evdev {
@@ -59,21 +58,12 @@ static void evdev_pass_event(struct evdev_client *client,
 	 * Interrupts are disabled, just acquire the lock
 	 */
 	spin_lock(&client->buffer_lock);
-#ifdef CONFIG_FIH_PROJECT_FBX
-        /*
-         * Avoid taking wakelocks for 2 sensors at once, "event2" & "event4"
-         */
-        if (strncmp(client->name, "event4", 6) && strncmp(client->name, "event2", 6))
-             wake_lock_timeout(&client->wake_lock, 5 * HZ);
-#else
 	wake_lock_timeout(&client->wake_lock, 5 * HZ);
-#endif
 	client->buffer[client->head++] = *event;
 	client->head &= EVDEV_BUFFER_SIZE - 1;
 	spin_unlock(&client->buffer_lock);
 
-        if (event->type == EV_SYN)
-            kill_fasync(&client->fasync, SIGIO, POLL_IN);
+	kill_fasync(&client->fasync, SIGIO, POLL_IN);
 }
 
 /*
@@ -298,8 +288,6 @@ static int evdev_open(struct inode *inode, struct file *file)
 		goto err_free_client;
 
 	file->private_data = client;
-        nonseekable_open(inode, file);
-
 	return 0;
 
  err_free_client:
@@ -355,20 +343,10 @@ static int evdev_fetch_next_event(struct evdev_client *client,
 	if (have_event) {
 		*event = client->buffer[client->tail++];
 		client->tail &= EVDEV_BUFFER_SIZE - 1;
-		if (client->head == client->tail) {
-#ifdef CONFIG_FIH_PROJECT_FBX
-              /*
-               * Since we didn't grab wakelocks for 2 sensors at once earlier
-               * no need to call wake_unlock
-               */
-                    if (strncmp(client->name, "event4", 6) && strncmp(client->name, "event2", 6))
-                        wake_unlock(&client->wake_lock);
-#else
-                        wake_unlock(&client->wake_lock);
-#endif
-               }
-        }
- 
+		if (client->head == client->tail)
+			wake_unlock(&client->wake_lock);
+	}
+
 	spin_unlock_irq(&client->buffer_lock);
 
 	return have_event;
@@ -547,7 +525,7 @@ static long evdev_do_ioctl(struct file *file, unsigned int cmd,
 	struct input_absinfo abs;
 	struct ff_effect effect;
 	int __user *ip = (int __user *)p;
-	unsigned int i, t, u, v;
+	int i, t, u, v;
 	int error;
 
 	switch (cmd) {
