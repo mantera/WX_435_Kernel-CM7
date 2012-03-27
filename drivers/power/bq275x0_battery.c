@@ -60,6 +60,7 @@ static DEFINE_IDR(battery_id);
 static DEFINE_MUTEX(battery_mutex);
 static DEFINE_MUTEX(flags_mutex);
 
+/*This is not needed for froyo - mantera 3/27/12
 #ifdef CONFIG_HAS_EARLYSUSPEND
 
 // Note: This is initialized to zero (*not* loaded)
@@ -107,8 +108,7 @@ static struct early_suspend btwlan_es = {
 
 #endif
 
-
-
+*/
 
 struct bq275x0_device_info {
     struct device       *dev;
@@ -2068,9 +2068,10 @@ static int bq275x0_battery_probe(struct i2c_client *client,
     
     if (di->dbg_enable)
         dev_info(&client->dev, "[DBG MECHANISM ENABLE]\n");
-    
-    wake_lock_init(&wlan_lock, WAKE_LOCK_SUSPEND, "wlan_lock");
-    wake_lock_init(&bt_lock, WAKE_LOCK_SUSPEND, "bt_lock");
+
+// This is not needed for froyo - mantera 3/27/12
+//    wake_lock_init(&wlan_lock, WAKE_LOCK_SUSPEND, "wlan_lock");
+//    wake_lock_init(&bt_lock, WAKE_LOCK_SUSPEND, "bt_lock");
 
     wake_lock_init(&di->bq275x0_wakelock, WAKE_LOCK_SUSPEND, "bq275x0");
     i2c_set_clientdata(client, di);
@@ -2115,7 +2116,8 @@ static int bq275x0_battery_probe(struct i2c_client *client,
     di->bq275x0_early_suspend.suspend = NULL;
     di->bq275x0_early_suspend.resume = bq275x0_late_resume;
     register_early_suspend(&di->bq275x0_early_suspend);
-    register_early_suspend(&btwlan_es);
+// This is not needed for froyo - mantera 3/27/12
+//    register_early_suspend(&btwlan_es);
 #endif
 
     INIT_DELAYED_WORK(&di->check_dfi, bq275x0_battery_check_dfi);
@@ -2223,7 +2225,8 @@ static int bq275x0_battery_remove(struct i2c_client *client)
 
 #ifdef CONFIG_HAS_EARLYSUSPEND  
     unregister_early_suspend(&di->bq275x0_early_suspend);
-    unregister_early_suspend(&btwlan_es);
+// This is not needed for froyo - mantera 3/27/12
+//    unregister_early_suspend(&btwlan_es);
 #endif
     
     bq275x0_battery_free_irq(di);
@@ -2242,8 +2245,9 @@ static int bq275x0_battery_remove(struct i2c_client *client)
     mutex_unlock(&battery_mutex);
     
     wake_lock_destroy(&di->bq275x0_wakelock);
-    wake_lock_destroy(&wlan_lock);
-    wake_lock_destroy(&bt_lock);
+// This is not needed for froyo - mantera 3/27/12
+//    wake_lock_destroy(&wlan_lock);
+//    wake_lock_destroy(&bt_lock);
 
     kfree(di);
 

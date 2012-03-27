@@ -235,7 +235,6 @@ bool m_SpkAmpOn=false;
 
 int sd_detect_pin = 0;
 int sd_enable_pin = 0;
-int bt_loaded = 0;
 
 static int pm8058_gpios_init(void)
 {
@@ -6644,8 +6643,7 @@ static int bluetooth_power(int on)
 	fih_bluetooth_status = on; 
 
 out:
-        bt_loaded = on;
-        printk(KERN_DEBUG "Bluetooth power switch (bt_loaded): %d\n", on);
+        printk(KERN_DEBUG "Bluetooth power switch: %d\n", on);
 
 	return 0;
 }
