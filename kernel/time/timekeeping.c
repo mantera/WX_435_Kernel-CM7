@@ -181,8 +181,15 @@ EXPORT_SYMBOL(get_nseconds);
 
 void update_xtime_cache(u64 nsec)
 {
-	xtime_cache = xtime;
-	timespec_add_ns(&xtime_cache, nsec);
+	/*
+	 * Use temporary variable so get_seconds() cannot catch
+	 * an intermediate xtime_cache.tv_sec value.
+	 * The ACCESS_ONCE() keeps the compiler from optimizing
+	 * out the intermediate value.
+	 */
+	struct timespec ts = xtime;
+	timespec_add_ns(&ts, nsec);
+	ACCESS_ONCE(xtime_cache) = ts;
 //Div2-SW2-BSP-pmlog, HenryMCWang +
 #ifdef __FIH_PM_STATISTICS__
 	if (g_secupdatereq) {
