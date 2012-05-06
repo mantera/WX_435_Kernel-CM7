@@ -479,8 +479,7 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
 	if (!firmware) {
 		dev_err(device, "%s: kmalloc(struct firmware) failed\n",
 			__func__);
-		retval = -ENOMEM;
-		goto out;
+		return -ENOMEM;
 	}
 
 	for (builtin = __start_builtin_fw; builtin != __end_builtin_fw;
@@ -492,6 +491,14 @@ _request_firmware(const struct firmware **firmware_p, const char *name,
 		firmware->size = builtin->size;
 		firmware->data = builtin->data;
 		return 0;
+	}
+
+	read_lock_usermodehelper();
+
+	if (WARN_ON(usermodehelper_is_disabled())) {
+		dev_err(device, "firmware: %s will not be loaded\n", name);
+		retval = -EBUSY;
+		goto out;
 	}
 
 	if (uevent)
@@ -531,6 +538,7 @@ error_kfree_fw:
 	kfree(firmware);
 	*firmware_p = NULL;
 out:
+	read_unlock_usermodehelper();
 	return retval;
 }
 
